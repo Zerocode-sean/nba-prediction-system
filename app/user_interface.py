@@ -26,25 +26,135 @@ sys.path.append(str(parent_dir))
 from src.prediction.pipeline import NBAPredictionPipeline
 from src.prediction.realtime_system import RealTimeNBASystem
 
-# Page config for modern UI
-st.set_page_config(
-    page_title="🏀 NBA Predictions",
-    page_icon="🏀",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
-
-# Custom CSS for modern, sleek design
+# Custom CSS for modern, sleek design with sports background
 st.markdown("""
 <style>
+    /* Sports-themed background with basketball court pattern */
+    .main {
+        background: linear-gradient(135deg, #0f1419 0%, #1a2332 25%, #2d3a52 50%, #1a2332 75%, #0f1419 100%);
+        background-size: 400% 400%;
+        animation: gradientShift 20s ease infinite;
+        min-height: 100vh;
+        position: relative;
+    }
+    
+    /* Basketball court lines overlay */
+    .main::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: 
+            /* Court center circle */
+            radial-gradient(circle at 50% 50%, transparent 48px, rgba(255,255,255,0.05) 50px, rgba(255,255,255,0.05) 52px, transparent 54px),
+            /* Court lines */
+            linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
+            linear-gradient(0deg, rgba(255,255,255,0.03) 1px, transparent 1px),
+            /* Basketball texture dots */
+            radial-gradient(circle at 25% 25%, rgba(255,165,0,0.08) 2px, transparent 2px),
+            radial-gradient(circle at 75% 75%, rgba(255,165,0,0.06) 1px, transparent 1px);
+        background-size: 200px 200px, 60px 60px, 60px 60px, 40px 40px, 30px 30px;
+        background-position: 0 0, 0 0, 0 0, 0 0, 15px 15px;
+        animation: courtMove 30s linear infinite;
+        pointer-events: none;
+        z-index: -1;
+        opacity: 0.8;
+    }
+    
+    @keyframes gradientShift {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+    }
+    
+    @keyframes courtMove {
+        0% { background-position: 0 0, 0 0, 0 0, 0 0, 15px 15px; }
+        100% { background-position: 200px 200px, 60px 60px, 60px 60px, 40px 40px, 45px 45px; }
+    }
+    
+    /* Content container with glassmorphism */
+    .block-container {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(15px);
+        border-radius: 20px;
+        margin: 1rem;
+        padding: 2rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        position: relative;
+        z-index: 1;
+    }
     .main-header {
         text-align: center;
-        background: linear-gradient(90deg, #1f4e79, #2d6aa0);
-        padding: 2rem;
-        border-radius: 15px;
+        background: linear-gradient(135deg, #1f4e79, #2d6aa0, #0066cc);
+        padding: 2.5rem;
+        border-radius: 20px;
         margin-bottom: 2rem;
         color: white;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        position: relative;
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .main-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+        animation: headerShimmer 6s ease-in-out infinite;
+        pointer-events: none;
+    }
+    
+    @keyframes headerShimmer {
+        0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+        100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+    }
+    
+    /* Enhanced mobile responsiveness */
+    @media (max-width: 1024px) {
+        .block-container {
+            margin: 0.8rem;
+            padding: 1.5rem;
+        }
+        
+        .main-header {
+            padding: 2rem;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .block-container {
+            margin: 0.5rem !important;
+            padding: 1rem !important;
+            border-radius: 15px !important;
+        }
+        
+        .main-header {
+            padding: 1.5rem !important;
+        }
+        
+        .main::before {
+            animation: none !important; /* Disable complex animations on mobile */
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .block-container {
+            margin: 0.2rem !important;
+            padding: 0.8rem !important;
+            border-radius: 10px !important;
+        }
+        
+        .main-header {
+            padding: 1rem !important;
+            margin-bottom: 1rem !important;
+        }
     }
     
     .game-card {
@@ -159,6 +269,221 @@ st.markdown("""
         padding: 1.5rem;
         background: #f8f9fa;
         border-radius: 12px;
+    }
+    
+    /* Modern Card Design */
+    .card-header {
+        margin-bottom: 1.5rem;
+    }
+    
+    .team-matchup {
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+    
+    .team-info {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .team-name {
+        font-size: 1.5rem;
+        font-weight: bold;
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #2d6aa0, #1f4e79);
+        color: white;
+        min-width: 120px;
+        text-align: center;
+    }
+    
+    .vs-text {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #6c757d;
+    }
+    
+    .game-details {
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+        gap: 1rem;
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 10px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .detail-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .detail-icon {
+        font-size: 1.2rem;
+    }
+    
+    .detail-text {
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .status-today {
+        color: #28a745 !important;
+        font-weight: bold;
+    }
+    
+    .status-other {
+        color: #6c757d !important;
+    }
+    
+    .predictions-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin: 2rem 0;
+    }
+    
+    .prediction-section {
+        background: linear-gradient(145deg, #ffffff, #f8f9fa);
+        border-radius: 12px;
+        padding: 1.5rem;
+        border: 1px solid #e9ecef;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        transition: transform 0.3s ease;
+    }
+    
+    .prediction-section:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    
+    .prediction-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .prediction-icon {
+        font-size: 1.3rem;
+    }
+    
+    .prediction-title {
+        font-weight: bold;
+        color: #2d6aa0;
+        font-size: 1.1rem;
+    }
+    
+    .prediction-content {
+        text-align: center;
+    }
+    
+    .prediction-result {
+        font-size: 1.2rem;
+        font-weight: bold;
+        padding: 0.8rem;
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+    }
+    
+    .confidence-badge {
+        display: inline-block;
+        padding: 0.4rem 0.8rem;
+        border-radius: 15px;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+    
+    .confidence-high {
+        background: linear-gradient(135deg, #dc3545, #fd7e14);
+        color: white;
+    }
+    
+    .confidence-medium {
+        background: linear-gradient(135deg, #ffc107, #28a745);
+        color: white;
+    }
+    
+    .confidence-low {
+        background: linear-gradient(135deg, #6c757d, #adb5bd);
+        color: white;
+    }
+    
+    .stats-summary {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+    
+    .stat-card {
+        background: linear-gradient(145deg, #ffffff, #f8f9fa);
+        border-radius: 10px;
+        padding: 1rem;
+        text-align: center;
+        border: 1px solid #e9ecef;
+        transition: transform 0.2s ease;
+    }
+    
+    .stat-card:hover {
+        transform: scale(1.05);
+    }
+    
+    .stat-card .stat-value {
+        font-size: 1.4rem;
+        font-weight: bold;
+        color: #2d6aa0;
+        margin-bottom: 0.3rem;
+    }
+    
+    .stat-card .stat-label {
+        font-size: 0.8rem;
+        color: #6c757d;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    /* Mobile Responsiveness */
+    @media (max-width: 768px) {
+        .team-info {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .team-name {
+            font-size: 1.2rem;
+            min-width: 100px;
+        }
+        
+        .predictions-container {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        .stats-summary {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .game-details {
+            flex-direction: column;
+            text-align: center;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .stats-summary {
+            grid-template-columns: 1fr;
+        }
+        
+        .team-name {
+            font-size: 1rem;
+            padding: 0.4rem 0.8rem;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -384,115 +709,124 @@ class UserInterface:
         return filtered
     
     def render_game_card(self, prediction):
-        """Render a single game prediction card"""
-        st.markdown('<div class="game-card">', unsafe_allow_html=True)
+        """Render a modern, interactive game prediction card with all details"""
         
-        # Check if this is an old game and warn user
+        # Check if this is an old game
         current_date = datetime.now().date()
         game_date = datetime.strptime(prediction['game_date'], '%Y-%m-%d').date()
         
+        # Modern card with complete game summary
+        st.markdown(f"""
+        <div class="game-card">
+            <div class="card-header">
+                <div class="team-matchup">
+                    <div class="team-info">
+                        <div class="team-name away-team">{prediction['away_team']}</div>
+                        <div class="vs-text">@</div>
+                        <div class="team-name home-team">{prediction['home_team']}</div>
+                    </div>
+                </div>
+                
+                <div class="game-details">
+                    <div class="detail-item">
+                        <span class="detail-icon">📅</span>
+                        <span class="detail-text">{prediction['game_date']}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-icon">🕐</span>
+                        <span class="detail-text">{prediction.get('game_time', 'TBD')}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-icon">⏰</span>
+                        <span class="detail-text {'status-today' if prediction['status'] == 'Today' else 'status-other'}">{prediction['status']}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="predictions-container">
+                <div class="prediction-section">
+                    <div class="prediction-header">
+                        <span class="prediction-icon">🏆</span>
+                        <span class="prediction-title">Win/Loss Prediction</span>
+                    </div>
+                    <div class="prediction-content">
+                        <div class="prediction-result win-prediction">
+                            Winner: {prediction['win_prediction']}
+                        </div>
+                        <div class="confidence-badge confidence-{prediction['win_confidence'].lower()}">
+                            {prediction['win_confidence']} ({prediction['win_probability']:.1%})
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="prediction-section">
+                    <div class="prediction-header">
+                        <span class="prediction-icon">📊</span>
+                        <span class="prediction-title">Over/Under Prediction</span>
+                    </div>
+                    <div class="prediction-content">
+                        <div class="prediction-result {'over-prediction' if prediction['over_under_prediction'] == 'Over' else 'under-prediction'}">
+                            {prediction['over_under_prediction']} {prediction['predicted_total']}
+                        </div>
+                        <div class="confidence-badge confidence-{prediction['ou_confidence'].lower()}">
+                            {prediction['ou_confidence']} ({prediction['ou_probability']:.1%})
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stats-summary">
+                <div class="stat-card">
+                    <div class="stat-value">{prediction['win_probability']:.0%}</div>
+                    <div class="stat-label">Win Prob</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{prediction['ou_probability']:.0%}</div>
+                    <div class="stat-label">O/U Prob</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{prediction['predicted_total']}</div>
+                    <div class="stat-label">Total</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{prediction['win_confidence'][0]}</div>
+                    <div class="stat-label">Confidence</div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Historical data warning
         if game_date < current_date:
-            st.warning(f"⚠️ This game was played on {prediction['game_date']} - this is historical data for validation purposes")
+            st.info(f"📊 Historical Game from {prediction['game_date']} - Used for model validation")
         
-        # Game header with teams and time
-        st.markdown(f"""
-        <div class="team-vs">
-            {prediction['away_team']} @ {prediction['home_team']}
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Game details
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.markdown(f"📅 **{prediction['game_date']}**")
-        with col2:
-            if 'game_time' in prediction:
-                st.markdown(f"🕐 **{prediction['game_time']}**")
-        with col3:
-            status_color = "#28a745" if prediction['status'] == "Today" else "#6c757d"
-            st.markdown(f"<span style='color: {status_color}; font-weight: bold;'>⏰ {prediction['status']}</span>", unsafe_allow_html=True)
-        
-        # Additional game info
-        if 'venue' in prediction or 'tv_network' in prediction:
-            col1, col2 = st.columns(2)
-            with col1:
-                if 'venue' in prediction:
-                    st.markdown(f"🏟️ {prediction['venue']}")
-            with col2:
-                if 'tv_network' in prediction:
-                    st.markdown(f"📺 {prediction['tv_network']}")
-        
-        st.markdown("---")
-        
-        # Predictions section
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("### 🏆 Win/Loss Prediction")
-            win_confidence_class = f"confidence-{prediction['win_confidence'].lower()}"
-            st.markdown(f"""
-            <div class="prediction-badge win-prediction">
-                Winner: {prediction['win_prediction']}
-            </div>
-            <div class="prediction-badge {win_confidence_class}">
-                {prediction['win_confidence']} Confidence ({prediction['win_probability']:.1%})
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col2:
-            st.markdown("### 📊 Over/Under Prediction")
-            ou_confidence_class = f"confidence-{prediction['ou_confidence'].lower()}"
-            ou_class = "over-prediction" if prediction['over_under_prediction'] == "Over" else "under-prediction"
-            st.markdown(f"""
-            <div class="prediction-badge {ou_class}">
-                {prediction['over_under_prediction']} {prediction['predicted_total']}
-            </div>
-            <div class="prediction-badge {ou_confidence_class}">
-                {prediction['ou_confidence']} Confidence ({prediction['ou_probability']:.1%})
-            </div>
-            """, unsafe_allow_html=True)
-        
-        # Quick stats
-        st.markdown("### 📈 Prediction Details")
-        st.markdown(f"""
-        <div class="stats-grid">
-            <div class="stat-item">
-                <div class="stat-value">{prediction['win_probability']:.0%}</div>
-                <div class="stat-label">Win Probability</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value">{prediction['ou_probability']:.0%}</div>
-                <div class="stat-label">O/U Probability</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value">{prediction['predicted_total']}</div>
-                <div class="stat-label">Predicted Total</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value">{prediction['win_confidence'][0]}</div>
-                <div class="stat-label">Confidence</div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Expandable details
-        with st.expander("🔍 More Details"):
+        # Expandable advanced details
+        with st.expander("🔍 Advanced Analytics & Betting Guide", expanded=False):
             col1, col2 = st.columns(2)
             
             with col1:
-                st.markdown("**Model Information:**")
+                st.markdown("#### 🤖 Model Information")
+                info_items = []
                 if 'model_version' in prediction:
-                    st.write(f"• Model Version: {prediction['model_version']}")
+                    info_items.append(f"**Model Version:** {prediction['model_version']}")
                 if 'features_used' in prediction:
-                    st.write(f"• Features Used: {prediction['features_used']}")
+                    info_items.append(f"**Features Used:** {prediction['features_used']}")
                 if 'created_at' in prediction:
                     created_time = datetime.fromisoformat(prediction['created_at'].replace('Z', '+00:00'))
-                    st.write(f"• Generated: {created_time.strftime('%H:%M')}")
+                    info_items.append(f"**Generated:** {created_time.strftime('%H:%M')}")
+                
+                for item in info_items:
+                    st.markdown(f"• {item}")
+                
+                if 'venue' in prediction:
+                    st.markdown(f"• **Venue:** {prediction['venue']}")
+                if 'tv_network' in prediction:
+                    st.markdown(f"• **TV:** {prediction['tv_network']}")
             
             with col2:
-                st.markdown("**Betting Recommendation:**")
+                st.markdown("#### 💰 Betting Recommendation")
                 
-                # Determine betting confidence
+                # Calculate strongest bet
                 max_confidence = max(
                     prediction.get('win_probability', 0.5), 
                     1 - prediction.get('win_probability', 0.5),
@@ -501,19 +835,24 @@ class UserInterface:
                 )
                 
                 if max_confidence >= 0.75:
-                    st.success("🔥 Strong Bet - High confidence")
+                    st.success("🔥 **STRONG BET** - High Confidence")
+                    st.markdown("*Model shows high confidence in this prediction*")
                 elif max_confidence >= 0.65:
-                    st.warning("⚡ Good Bet - Medium confidence") 
+                    st.warning("⚡ **GOOD BET** - Medium Confidence")
+                    st.markdown("*Solid prediction with good probability*")
                 else:
-                    st.info("⚠️ Risky Bet - Low confidence")
+                    st.info("⚠️ **CAUTIOUS BET** - Lower Confidence")
+                    st.markdown("*Consider smaller stake or skip this game*")
                 
-                # Show strongest prediction
+                # Show best bet recommendation
                 if abs(prediction['win_probability'] - 0.5) > abs(prediction['ou_probability'] - 0.5):
-                    st.write(f"**Best Bet:** {prediction['win_prediction']} to win")
+                    st.markdown(f"**🎯 Best Bet:** {prediction['win_prediction']} to win")
                 else:
-                    st.write(f"**Best Bet:** {prediction['over_under_prediction']} {prediction['predicted_total']}")
+                    st.markdown(f"**🎯 Best Bet:** {prediction['over_under_prediction']} {prediction['predicted_total']}")
+                
+                st.markdown("**💡 Remember:** Always bet responsibly!")
         
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown("---")
     
     def render_summary_stats(self, predictions):
         """Render summary statistics"""
