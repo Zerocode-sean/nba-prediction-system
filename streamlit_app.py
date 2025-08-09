@@ -28,6 +28,46 @@ st.set_page_config(
 app_dir = Path(__file__).parent / "app"
 sys.path.append(str(app_dir))
 
+def check_admin_auth():
+    """Simple admin authentication"""
+    if 'admin_authenticated' not in st.session_state:
+        st.session_state.admin_authenticated = False
+    
+    if not st.session_state.admin_authenticated:
+        st.markdown("""
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                    color: white; padding: 2rem; border-radius: 15px; text-align: center; margin: 2rem 0;">
+            <h2>🔐 Admin Access Required</h2>
+            <p>Enter admin credentials to access management features</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        with st.form("admin_login"):
+            username = st.text_input("Username", placeholder="admin")
+            password = st.text_input("Password", type="password", placeholder="Enter admin password")
+            submit = st.form_submit_button("🔑 Login", use_container_width=True)
+            
+            if submit:
+                # Simple authentication (in production, use proper auth)
+                if username == "admin" and password == "nba2025":
+                    st.session_state.admin_authenticated = True
+                    st.success("✅ Authentication successful!")
+                    st.rerun()
+                else:
+                    st.error("❌ Invalid credentials. Try: admin / nba2025")
+        
+        st.markdown("""
+        <div style="background: #f8f9fa; padding: 1rem; border-radius: 10px; margin-top: 2rem;">
+            <h4>📝 Demo Credentials:</h4>
+            <p><strong>Username:</strong> admin<br>
+            <strong>Password:</strong> nba2025</p>
+            <small>Note: In production, use proper authentication system</small>
+        </div>
+        """, unsafe_allow_html=True)
+        return False
+    
+    return True
+
 def main():
     """Main Streamlit application"""
     
@@ -78,9 +118,11 @@ def main():
             user_main()
             
         elif app_choice == "🔧 Admin Dashboard":
-            # Import and run admin interface
-            from admin_interface import main as admin_main
-            admin_main()
+            # Check admin authentication
+            if check_admin_auth():
+                # Import and run admin interface
+                from admin_interface import main as admin_main
+                admin_main()
             
         elif app_choice == "✅ Validation":
             # Import and run validation dashboard
