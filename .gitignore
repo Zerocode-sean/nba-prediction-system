@@ -14,7 +14,9 @@
 *.cer
 *.crt
 config/secrets.py
+# Streamlit secrets (but keep example)
 .streamlit/secrets.toml
+!.streamlit/secrets.toml.example
 
 # API Keys and Tokens
 *api_key*
