@@ -14,6 +14,14 @@ import numpy as np
 from datetime import datetime, date, timedelta
 from pathlib import Path
 
+# Optional imports for charts
+try:
+    import plotly.express as px
+    import plotly.graph_objects as go
+    PLOTLY_AVAILABLE = True
+except ImportError:
+    PLOTLY_AVAILABLE = False
+
 # Set page config first
 st.set_page_config(
     page_title="🏀 NBA Predictions",
@@ -616,15 +624,98 @@ def show_user_header():
                 logout_user()
 
 def show_user_dashboard(user):
-    """Show user dashboard - route to enhanced version"""
+    """Show user dashboard with enhanced features"""
+    # Try to use enhanced dashboard first
     if ENHANCED_DASHBOARD_AVAILABLE and enhanced_dashboard_main:
         st.sidebar.success("✅ Enhanced Dashboard Loaded")
-        enhanced_dashboard_main(user)
+        try:
+            enhanced_dashboard_main(user)
+            return
+        except Exception as e:
+            st.sidebar.error(f"⚠️ Enhanced dashboard error: {str(e)}")
+            st.error(f"Enhanced dashboard failed to load: {str(e)}")
+            # Fall through to basic dashboard
     else:
-        st.sidebar.error("❌ Enhanced dashboard unavailable")
-        st.error("Enhanced dashboard not available. Please check the user_dashboard.py file.")
-        st.title("🏀 Basic NBA Dashboard")
-        st.write(f"Welcome {user['name']}! Basic dashboard is loading...")
+        st.sidebar.warning("⚠️ Enhanced dashboard not available, using basic version")
+    
+    # Basic user dashboard for testing
+    st.title("🏀 NBA Predictions - User Dashboard")
+    st.markdown(f"### Welcome back, {user.get('name', user.get('username', 'User'))}!")
+    
+    # User info display
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("🎯 User Role", user.get('role', 'user').title())
+    with col2:
+        st.metric("📧 Email", user.get('email', 'N/A'))
+    with col3:
+        st.metric("📅 Account Status", user.get('status', 'active').title())
+    
+    # Basic tabs for user functionality
+    tab1, tab2, tab3, tab4 = st.tabs(["🏠 Overview", "🎯 Predictions", "📊 Analytics", "⚙️ Settings"])
+    
+    with tab1:
+        st.markdown("### 📈 Quick Overview")
+        st.info("This is the basic user dashboard (enhanced version temporarily disabled)")
+        
+        # Sample metrics
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("� Total Predictions", "45", "+3")
+        with col2:
+            st.metric("✅ Correct", "32", "+2")
+        with col3:
+            st.metric("📊 Accuracy", "71%", "+2%")
+        with col4:
+            st.metric("🔥 Hot Picks", "8", "+1")
+    
+    with tab2:
+        st.markdown("### 🎯 My Predictions")
+        st.info("Your predictions will be displayed here")
+        
+        # Sample prediction data
+        sample_data = {
+            'Game': ['Lakers vs Warriors', 'Celtics vs Heat', 'Nets vs 76ers'],
+            'Prediction': ['Lakers', 'Celtics', 'Nets'],
+            'Confidence': ['85%', '72%', '68%'],
+            'Status': ['Pending', 'Won', 'Lost']
+        }
+        st.dataframe(pd.DataFrame(sample_data))
+    
+    with tab3:
+        st.markdown("### 📊 Performance Analytics")
+        st.info("Your performance analytics will be displayed here")
+        
+        # Sample chart
+        if PLOTLY_AVAILABLE:
+            dates = pd.date_range(start='2025-01-01', end='2025-08-10', freq='D')
+            accuracy = np.random.uniform(60, 85, len(dates))
+            
+            fig = px.line(x=dates, y=accuracy, title="Prediction Accuracy Over Time")
+            fig.update_layout(
+                plot_bgcolor='rgba(0,0,0,0)',
+                paper_bgcolor='rgba(0,0,0,0)',
+                font_color='white'
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            # Fallback to simple line chart
+            dates = pd.date_range(start='2025-01-01', end='2025-08-10', freq='W')
+            accuracy = np.random.uniform(60, 85, len(dates))
+            chart_data = pd.DataFrame({'Date': dates, 'Accuracy': accuracy})
+            st.line_chart(chart_data.set_index('Date'))
+    
+    with tab4:
+        st.markdown("### ⚙️ User Settings")
+        st.info("User settings will be available here")
+        
+        # Basic settings
+        st.toggle("🔔 Email Notifications", value=True)
+        st.toggle("📱 Push Notifications", value=False)
+        st.selectbox("🌓 Theme", ["Dark", "Light", "Auto"])
+        
+        if st.button("💾 Save Settings", type="primary"):
+            st.success("✅ Settings saved!")
 
 def show_admin_dashboard(user):
     """Show comprehensive admin dashboard"""
